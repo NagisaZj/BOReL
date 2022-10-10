@@ -299,12 +299,15 @@ def main():
     set_gpu_mode(torch.cuda.is_available() and args.use_gpu)
 
     args, env = off_utl.expand_args(args)
-
-    dataset, goals = off_utl.load_dataset(data_dir=args.data_dir, args=args, arr_type='numpy')
-    # dataset, goals = off_utl.load_dataset(args)
-    if args.hindsight_relabelling:
-        print('Perform reward relabelling...')
-        dataset, goals = off_utl.mix_task_rollouts(dataset, env, goals, args)
+    print(args.obs_dim,args.action_dim)
+    data_dir='cheetah-velmed'
+    data_dir='reach-v2'
+    data_dir = args.env_name
+    # dataset, goals = off_utl.load_dataset(data_dir=args.data_dir, args=args, arr_type='numpy')
+    dataset, goals = off_utl.load_dataset_mine(data_dir=data_dir, args=args, arr_type='numpy')
+    # if args.hindsight_relabelling:
+    #     print('Perform reward relabelling...')
+    #     dataset, goals = off_utl.mix_task_rollouts(dataset, env, goals, args)
     # vis test tasks
     # vis_train_tasks(env.unwrapped, goals)     # not with GridNavi
 

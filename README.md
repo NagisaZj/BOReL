@@ -24,7 +24,9 @@ The main script for the VAE training is ``train_vae_offline.py``.
 Configuration files are in ``vae_config``. All training parameters can be set from within the files, or by passing command line arguments.  
 
 Run (for example):  
-``python train_vae_offline.py --env-type ant_semicircle_sparse``  
+``python train_vae_offline.py --env-type ant_semicircle_sparse`` 
+
+``CUDA_VISIBLE_DEVICES=7 python train_vae_offline.py --env-type cheetah_vel --env-name window-open-v2``  
 
 This will train the VAE (implemented in ``models\vae.py``).  
 
@@ -37,7 +39,21 @@ The main script for the offline meta-RL training is ``train_agent_offline.py``.
 Configuration files are in ``offline_config``. All training parameters can be set from within the files, or by passing command line arguments.  
 
 Run (for example):  
-``python train_offline_agent.py --env-type ant_semicircle_sparse``  
+
+
+CUDA_VISIBLE_DEVICES=1 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name push-v2 --vae-model-name relabel__08_10_20_32_32
+
+CUDA_VISIBLE_DEVICES=2 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name pick-place-v2 --vae-model-name relabel__08_10_20_32_24
+
+CUDA_VISIBLE_DEVICES=3 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name window-open-v2 --vae-model-name relabel__08_10_20_31_14
+
+CUDA_VISIBLE_DEVICES=4 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name peg-insert-side-v2 --vae-model-name relabel__08_10_20_31_57
+
+CUDA_VISIBLE_DEVICES=5 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name lever-pull-v2 --vae-model-name relabel__08_10_20_33_23
+
+CUDA_VISIBLE_DEVICES=6 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name drawer-close-v2--vae-model-name relabel__08_10_20_31_38
+
+
 
 Note the ``--transform-data-bamdp`` argument. When training the meta-RL agent for the first time, this argument should be set to ``True`` in order to perform State Relabelling. 
 That is, after loading the datasets and the trained vae, the datasets will be passed through the encoder to produce the approximate belief. This belief is then concatenated 

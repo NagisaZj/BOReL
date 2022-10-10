@@ -5,13 +5,13 @@ from utils.cli import boolean_argument
 
 def get_args(rest_args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env-name', default='HalfCheetahVel-v0')
-    parser.add_argument('--seed', type=int, default=73)
+    parser.add_argument('--env-name', default='reach-v2')
+    parser.add_argument('--seed', type=int, default=73)# reach-v2
 
     parser.add_argument('--belief-rewards', default=False, help='use R+=E[R]')
     parser.add_argument('--num-belief-samples', default=20)
-    parser.add_argument('--num-train-tasks', default=100)
-    parser.add_argument('--num-eval-tasks', default=20)
+    parser.add_argument('--num-train-tasks', default=40)
+    parser.add_argument('--num-eval-tasks', default=10)
     parser.add_argument('--hindsight-relabelling', default=False)
 
     parser.add_argument('--num-trajs-per-task', type=int, default=None,
@@ -64,7 +64,7 @@ def get_args(rest_args):
 
     parser.add_argument('--vae-dir', default='./trained_vae')
 
-    parser.add_argument('--vae-model-name', default='no_relabel__29_06_13_08_41')
+    parser.add_argument('--vae-model-name', default='relabel__08_10_20_32_40')
     # parser.add_argument('--vae-model-name', default='relabel__10_08_01_45_08')
 
     args = parser.parse_args(rest_args)

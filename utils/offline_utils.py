@@ -6,7 +6,11 @@ from utils import helpers as utl
 import matplotlib.pyplot as plt
 from torchkit import pytorch_utils as ptu
 from environments.make_env import make_env
+from rlkit.envs import ENVS
+from rlkit.envs.wrappers import NormalizedBoxEnv
 
+import  metaworld,random,gym,gym.wrappers
+from rlkit.envs.metaworld_wrapper import MetaWorldWrapper
 
 def get_model_path(folder, model_name='encoder', iteration=None):
     '''
@@ -73,11 +77,31 @@ def vis_train_tasks(env, goals):
 
 
 def expand_args(args, include_act_space=False):
-    # create env to get parameters
-    env = make_env(args.env_name,
-                   args.max_rollouts_per_task,
-                   seed=args.seed,
-                   n_tasks=1)
+    # # create env to get parameters
+    # env = make_env(args.env_name,
+    #                args.max_rollouts_per_task,
+    #                seed=args.seed,
+    #                n_tasks=1)
+
+    if 'v2' not in args.env_name:
+        env = NormalizedBoxEnv(ENVS[args.env_name]())
+    else:
+
+        ml1 = metaworld.ML1(args.env_name, seed=1337)  # Construct the benchmark, sampling tasks
+
+        env = ml1.train_classes[args.env_name]()  # Create an environment with task
+        # print(ml1.train_tasks)
+        env.train_tasks = ml1.train_tasks
+        task = random.choice(ml1.train_tasks)
+        env.set_task(task)
+
+        tasks = list(range(len(env.train_tasks)))
+        # env = gym.wrappers.TimeLimit(gym.wrappers.ClipAction(MetaWorldWrapper(env)), 500)
+        env = gym.wrappers.TimeLimit(gym.wrappers.ClipAction(env), 500)
+        env = MetaWorldWrapper(env)
+        env.unwrapped._max_episode_steps = 500
+        env.is_metaworld = 1
+
 
     if isinstance(env.action_space, gym.spaces.discrete.Discrete):
         args.action_dim = 1
@@ -85,7 +109,7 @@ def expand_args(args, include_act_space=False):
         args.action_dim = env.action_space.shape[0]
     args.obs_dim = env.observation_space.shape[0]
 
-    args.trajectory_len = env.unwrapped._max_episode_steps * args.max_rollouts_per_task
+    args.trajectory_len = env.unwrapped._max_episode_steps #* args.max_rollouts_per_task
     args.num_states = env.unwrapped.num_states if hasattr(env.unwrapped, 'num_states') else None
     if include_act_space:
         args.act_space = env.action_space
@@ -211,9 +235,96 @@ def load_dataset(data_dir, args, num_tasks=None, allow_dense_data_loading=True, 
         #       '. Next obs shape: ' + str(np.shape(dataset[-1][3])))
     print('{} experiments loaded.'.format(i + 1))
     goals = np.vstack(goals)
-
+    print(dataset[0][0].shape)
     return dataset, goals
 
+
+def load_dataset_mine(data_dir, args, num_tasks=None, allow_dense_data_loading=True, arr_type='tensor'):
+    dataset = []
+    train_trj_paths = []
+    train_epoch = 49500
+    num_tasks = 50
+    for i in range(num_tasks):
+        obs_task = []
+        action_task = []
+        reward_task = []
+        next_obs_task = []
+        traminal_task = []
+        for j in range(45):
+            obs_train_lst = []
+            action_train_lst = []
+            reward_train_lst = []
+            next_obs_train_lst = []
+            terminal_train_lst = []
+            path = "/data2/zj/Offline-MetaRL/data/"+data_dir+ "/goal_idx%d/"%i+ "trj_evalsample%d_step%d.npy" % (j, train_epoch)
+            trj_npy = np.load(path, allow_pickle=True)
+            obs_train_lst += list(trj_npy[:, 0])
+            action_train_lst += list(trj_npy[:, 1])
+            reward_train_lst += list(trj_npy[:, 2])
+            next_obs_train_lst += list(trj_npy[:, 3])
+            terminal = [0 for _ in range(trj_npy.shape[0])]
+            terminal[-1] = 1
+            terminal_train_lst += terminal
+            obs = np.array(obs_train_lst)
+            actions = np.array(action_train_lst)
+            rewards = np.array(reward_train_lst)
+            next_obs = np.array(next_obs_train_lst)
+            terminals = np.array(terminal_train_lst)
+            obs_task.append(obs)
+            action_task.append(actions)
+            reward_task.append(rewards[:,None])
+            next_obs_task.append(next_obs)
+            traminal_task.append(terminals[:,None])
+
+        obs_task2 = np.array(obs_task).transpose(1,0,2)#.repeat(15,axis=1)
+        action_task2 = np.array(action_task).transpose(1,0,2)#.repeat(15,axis=1)
+        reward_task2 = np.array(reward_task).transpose(1,0,2)#.repeat(15,axis=1)
+        next_obs_task2 = np.array(next_obs_task).transpose(1,0,2)#.repeat(15,axis=1)
+        traminal_task2 = np.array(traminal_task).transpose(1,0,2)#.repeat(15,axis=1)
+        print(obs_task2.shape)
+        dataset.append([obs_task2, action_task2, reward_task2, next_obs_task2, traminal_task2])
+
+    # for d in dataset:
+    #     print(dataset[0][0][1,1])
+
+    #         train_trj_paths.append("/data2/zj/Offline-MetaRL/data/"+data_dir+ "/goal_idx%d/"%i+ "trj_evalsample%d_step%d.npy" % (j, train_epoch))
+    #
+    # train_paths = train_trj_paths
+    # # print('ttttt',train_paths)
+    # for train_path in train_paths:
+    #     obs_train_lst = []
+    #     action_train_lst = []
+    #     reward_train_lst = []
+    #     next_obs_train_lst = []
+    #     terminal_train_lst = []
+    #     # print(train_path)
+    #     trj_npy = np.load(train_path, allow_pickle=True)
+    #     obs_train_lst += list(trj_npy[:, 0])
+    #     action_train_lst += list(trj_npy[:, 1])
+    #     # for i in range(len(trj_npy)):
+    #     #     if trj_npy[i,2]>=-0.2:
+    #     #         trj_npy[i, 2]= (trj_npy[i, 2] +0.2) * (1/0.2)
+    #     #     else:
+    #     #         trj_npy[i, 2] = 0
+    #     reward_train_lst += list(trj_npy[:, 2])
+    #     next_obs_train_lst += list(trj_npy[:, 3])
+    #     terminal = [0 for _ in range(trj_npy.shape[0])]
+    #     terminal[-1] = 1
+    #     terminal_train_lst += terminal
+    #     obs = np.array(obs_train_lst)
+    #     actions = np.array(action_train_lst)
+    #     rewards = np.array(reward_train_lst)
+    #     next_obs = np.array(next_obs_train_lst)
+    #     terminals = np.array(terminal_train_lst)
+    #
+    #
+    #
+    #
+    #
+    #     dataset.append([obs, actions, rewards, next_obs, terminals])
+    goals = None
+
+    return dataset, goals
 
 def save_dataset(path, dataset, goals):
     for goal, set in zip(goals, dataset):

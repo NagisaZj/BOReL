@@ -16,6 +16,11 @@ from utils.tb_logger import TBLogger
 from models.vae import VAE
 from models.policy import TanhGaussianPolicy
 
+from rlkit.envs import ENVS
+from rlkit.envs.wrappers import NormalizedBoxEnv
+
+import  metaworld,random,gym,gym.wrappers
+from rlkit.envs.metaworld_wrapper import MetaWorldWrapper
 
 class OfflineMetaLearner:
     """
@@ -56,10 +61,29 @@ class OfflineMetaLearner:
         self.load_vae()
 
         # create environment for evaluation
-        self.env = make_env(args.env_name,
-                            args.max_rollouts_per_task,
-                            seed=args.seed,
-                            n_tasks=self.args.num_eval_tasks)
+        # self.env = make_env(args.env_name,
+        #                     args.max_rollouts_per_task,
+        #                     seed=args.seed,
+        #                     n_tasks=self.args.num_eval_tasks)
+
+        if 'v2' not in args.env_name:
+            self.env = NormalizedBoxEnv(ENVS[args.env_name]())
+        else:
+
+            ml1 = metaworld.ML1(args.env_name, seed=1337)  # Construct the benchmark, sampling tasks
+
+            env = ml1.train_classes[args.env_name]()  # Create an environment with task
+            # print(ml1.train_tasks)
+            env.train_tasks = ml1.train_tasks
+            task = random.choice(ml1.train_tasks)
+            env.set_task(task)
+
+            tasks = list(range(len(env.train_tasks)))
+            # env = gym.wrappers.TimeLimit(gym.wrappers.ClipAction(MetaWorldWrapper(env)), 500)
+            env = gym.wrappers.TimeLimit(gym.wrappers.ClipAction(env), 500)
+            self.env = MetaWorldWrapper(env)
+            self.env.unwrapped._max_episode_steps = 500
+            self.env.is_metaworld = 1
         if self.args.env_name == 'GridNavi-v2':
             self.env.unwrapped.goals = [tuple(goal.astype(int)) for goal in self.goals]
 
@@ -144,6 +168,7 @@ class OfflineMetaLearner:
 
     def train(self):
         self._start_training()
+        self.average_returns = []
         for iter_ in range(self.args.num_iters):
             self.training_mode(True)
             indices = np.random.choice(len(self.goals), self.args.meta_batch)
@@ -181,19 +206,19 @@ class OfflineMetaLearner:
         return rl_losses_agg
 
     def evaluate(self):
-        num_episodes = self.args.max_rollouts_per_task
+        num_episodes = 10 # self.args.max_rollouts_per_task
         num_steps_per_episode = self.env.unwrapped._max_episode_steps
-        num_tasks = self.args.num_eval_tasks
+        num_tasks = 50# self.args.num_eval_tasks
         obs_size = self.env.unwrapped.observation_space.shape[0]
 
         returns_per_episode = np.zeros((num_tasks, num_episodes))
         success_rate = np.zeros(num_tasks)
 
-        rewards = np.zeros((num_tasks, self.args.trajectory_len))
-        reward_preds = np.zeros((num_tasks, self.args.trajectory_len))
-        observations = np.zeros((num_tasks, self.args.trajectory_len + 1, obs_size))
+        rewards = np.zeros((num_tasks, self.args.trajectory_len*10))
+        reward_preds = np.zeros((num_tasks, self.args.trajectory_len*10))
+        observations = np.zeros((num_tasks, self.args.trajectory_len*10 + 1, obs_size))
         if self.args.policy == 'sac':
-            log_probs = np.zeros((num_tasks, self.args.trajectory_len))
+            log_probs = np.zeros((num_tasks, self.args.trajectory_len*10))
 
         # This part is very specific for the Semi-Circle env
         # if self.args.env_name == 'PointRobotSparse-v0':
@@ -210,8 +235,8 @@ class OfflineMetaLearner:
         #     n_grid_points = centers.shape[0]
         #     reward_belief_discretized = np.zeros((num_tasks, self.args.trajectory_len, centers.shape[0]))
 
-        for task in self.env.unwrapped.get_all_task_idx():
-            obs = ptu.from_numpy(self.env.reset(task))
+        for task in self.env.get_all_task_idx():
+            obs = ptu.from_numpy(self.env.reset_task(task))
             obs = obs.reshape(-1, obs.shape[-1])
             step = 0
 
@@ -223,6 +248,7 @@ class OfflineMetaLearner:
 
             for episode_idx in range(num_episodes):
                 running_reward = 0.
+                obs = ptu.from_numpy(self.env.reset()).reshape(-1, obs.shape[-1])
                 for step_idx in range(num_steps_per_episode):
                     # add distribution parameters to observation - policy is conditioned on posterior
                     augmented_obs = self.get_augmented_obs(obs, task_mean, task_logvar)
@@ -302,10 +328,10 @@ class OfflineMetaLearner:
             if self.args.log_tensorboard:
                 tasks_to_vis = np.random.choice(self.args.num_eval_tasks, 5)
                 for i, task in enumerate(tasks_to_vis):
-                    self.env.reset(task)
-                    self.tb_logger.writer.add_figure('policy_vis/task_{}'.format(i),
-                                                     utl_eval.plot_rollouts(observations[task, :], self.env),
-                                                     self._n_rl_update_steps_total)
+                    self.env.reset_task(task)
+                    # self.tb_logger.writer.add_figure('policy_vis/task_{}'.format(i),
+                    #                                  utl_eval.plot_rollouts(observations[task, :], self.env),
+                    #                                  self._n_rl_update_steps_total)
                     self.tb_logger.writer.add_figure('reward_prediction_train/task_{}'.format(i),
                                                      utl_eval.plot_rew_pred_vs_rew(rewards[task, :],
                                                                                    reward_preds[task, :]),
@@ -333,6 +359,11 @@ class OfflineMetaLearner:
                                                      self._n_rl_update_steps_total)
                     self.tb_logger.writer.add_scalar('returns_multi_episode/success_rate',
                                                      np.mean(success_rate),
+                                                     self._n_rl_update_steps_total)
+                    self.tb_logger.writer.add_scalar('returns_multi_episode/mean',
+                                                     np.mean(np.mean(returns, axis=-1)),
+                                                     self._n_rl_update_steps_total)
+                    self.tb_logger.writer.add_scalar('returns/returns_std', np.std(returns),
                                                      self._n_rl_update_steps_total)
                 else:
                     self.tb_logger.writer.add_scalar('returns/returns_mean', np.mean(returns),

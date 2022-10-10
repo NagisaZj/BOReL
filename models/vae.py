@@ -181,6 +181,7 @@ class VAE:
                 rew_pred = self.reward_decoder(dec_embedding, dec_next_obs)
                 loss_rew = F.binary_cross_entropy(rew_pred, (dec_rewards == 1).float(), reduction='none').mean(dim=1)
             elif self.args.rew_pred_type == 'deterministic':
+                # print(dec_embedding.shape,dec_next_obs.shape,dec_prev_obs.shape,dec_actions.shape)
                 rew_pred = self.reward_decoder(dec_embedding, dec_next_obs, dec_prev_obs, dec_actions)
                 loss_rew = (rew_pred - dec_rewards).pow(2).mean(dim=1)
             elif self.args.rew_pred_type == 'gaussian':

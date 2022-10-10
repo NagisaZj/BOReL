@@ -9,6 +9,7 @@ import utils.config_utils as config_utl
 from utils import offline_utils as off_utl
 from offline_config import args_ant_semicircle_sparse, \
     args_cheetah_vel, args_point_robot_sparse, args_gridworld
+import numpy as np
 
 
 def main():
@@ -47,8 +48,10 @@ def main():
         off_utl.load_trained_vae(vae, vae_models_path)
         # load data and relabel
         save_data_path = os.path.join(args.main_data_dir, args.env_name, args.relabelled_data_dir)
-        os.makedirs(save_data_path)
-        dataset, goals = off_utl.load_dataset(data_dir=args.data_dir, args=args, arr_type='numpy')
+        os.makedirs(save_data_path,exist_ok=True)
+        # dataset, goals = off_utl.load_dataset(data_dir=args.data_dir, args=args, arr_type='numpy')
+        dataset, goals = off_utl.load_dataset_mine(data_dir=args.env_name, args=args, arr_type='numpy')
+        goals = np.zeros(len(dataset))
         bamdp_dataset = off_utl.transform_mdps_ds_to_bamdp_ds(dataset, vae, args)
         # save relabelled data
         off_utl.save_dataset(save_data_path, bamdp_dataset, goals)

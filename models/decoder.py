@@ -103,10 +103,14 @@ class RewardDecoder(nn.Module):
             # task_embedding = task_embedding.reshape((-1, task_embedding.shape[-1]))
             # next_state = next_state.reshape((-1, next_state.shape[-1]))
             hns = self.state_encoder(next_state)
+            # h = torch.cat((task_embedding, hns), dim=-1)
+            # print(task_embedding.shape,hns.shape)
             h = torch.cat((task_embedding, hns), dim=-1)
             if self.input_action:
                 # action = action.reshape((-1, action.shape[-1]))
+                # print(action.shape,action[0])
                 ha = self.action_encoder(action)
+                # print(h.shape,ha.shape)
                 h = torch.cat((h, ha), dim=-1)
             if self.input_prev_state:
                 # prev_state = prev_state.reshape((-1, prev_state.shape[-1]))
