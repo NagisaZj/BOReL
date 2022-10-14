@@ -363,7 +363,7 @@ class OfflineMetaLearner:
                     self.tb_logger.writer.add_scalar('returns_multi_episode/mean',
                                                      np.mean(returns[:,-1]),
                                                      self._n_rl_update_steps_total)
-                    self.tb_logger.writer.add_scalar('returns/returns_std', np.std(returns),
+                    self.tb_logger.writer.add_scalar('returns/returns_std', np.std(returns[:,-1]),
                                                      self._n_rl_update_steps_total)
                 else:
                     self.tb_logger.writer.add_scalar('returns/returns_mean', np.mean(returns),
