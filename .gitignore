@@ -17,6 +17,7 @@ out_logs/
 batch_data/
 logs/
 trained_vae/
+logs2/
 
 
 

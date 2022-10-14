@@ -26,7 +26,8 @@ Configuration files are in ``vae_config``. All training parameters can be set fr
 Run (for example):  
 ``python train_vae_offline.py --env-type ant_semicircle_sparse`` 
 
-``CUDA_VISIBLE_DEVICES=7 python train_vae_offline.py --env-type cheetah_vel --env-name window-open-v2``  
+``CUDA_VISIBLE_DEVICES=2 python train_vae_offline.py --env-type cheetah_vel --env-name sweep-v2``  
+
 
 This will train the VAE (implemented in ``models\vae.py``).  
 
@@ -41,17 +42,32 @@ Configuration files are in ``offline_config``. All training parameters can be se
 Run (for example):  
 
 
-CUDA_VISIBLE_DEVICES=1 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name push-v2 --vae-model-name relabel__08_10_20_32_32
 
-CUDA_VISIBLE_DEVICES=2 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name pick-place-v2 --vae-model-name relabel__08_10_20_32_24
+"Handle-Pull-V2"		"Handle-Pull-Side-V2"	"Pick-Out-Of-Hole-V2"		"Plate-Slide-Side-V2"		"Plate-Slide-V2"		"Reach-Wall-V2"  "Soccer-V2"  "Push-Wall-V2"  "Window-Close-V2"  	"Shelf-Place-V2"  "Sweep-V2" 
 
-CUDA_VISIBLE_DEVICES=3 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name window-open-v2 --vae-model-name relabel__08_10_20_31_14
+CUDA_VISIBLE_DEVICES=1 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name handle-pull-v2 --vae-model-name relabel__11_10_08_47_32
 
-CUDA_VISIBLE_DEVICES=4 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name peg-insert-side-v2 --vae-model-name relabel__08_10_20_31_57
+CUDA_VISIBLE_DEVICES=2 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name handle-pull-side-v2  --vae-model-name relabel__11_10_08_47_44
 
-CUDA_VISIBLE_DEVICES=5 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name lever-pull-v2 --vae-model-name relabel__08_10_20_33_23
+CUDA_VISIBLE_DEVICES=3 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name pick-out-of-hole-v2  --vae-model-name relabel__11_10_08_47_59
 
-CUDA_VISIBLE_DEVICES=6 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name drawer-close-v2--vae-model-name relabel__08_10_20_31_38
+CUDA_VISIBLE_DEVICES=4 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name plate-slide-side-v2  --vae-model-name relabel__11_10_08_48_18
+
+CUDA_VISIBLE_DEVICES=5 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name plate-slide-v2  --vae-model-name relabel__11_10_08_48_28
+
+CUDA_VISIBLE_DEVICES=6 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name reach-wall-v2  --vae-model-name relabel__11_10_08_48_42
+
+CUDA_VISIBLE_DEVICES=7 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name soccer-v2  --vae-model-name relabel__11_10_08_48_54
+
+CUDA_VISIBLE_DEVICES=0 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name push-wall-v2  --vae-model-name relabel__11_10_08_49_10
+
+CUDA_VISIBLE_DEVICES=1 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name window-close-v2  --vae-model-name relabel__11_10_08_49_49
+
+CUDA_VISIBLE_DEVICES=2 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name shelf-place-v2  --vae-model-name relabel__11_10_08_50_04
+
+CUDA_VISIBLE_DEVICES=3 python train_offline_agent.py --env-type cheetah_vel  --transform-data-bamdp True --env-name sweep-v2  --vae-model-name relabel__11_10_08_50_15
+
+
 
 
 

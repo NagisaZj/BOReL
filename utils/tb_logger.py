@@ -25,7 +25,7 @@ class TBLogger:
 
         if log_dir is None:
             log_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-            log_dir = os.path.join(log_dir, 'logs')
+            log_dir = os.path.join(log_dir, 'logs2')
 
         if not os.path.exists(log_dir):
             try:
